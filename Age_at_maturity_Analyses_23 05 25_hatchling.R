@@ -14,12 +14,12 @@ graphics.off()  # turns off any plots from previous work session
 rm(list=ls(all=TRUE)) # clears out environment 
 #
 #Load require packages (install as necessary)
-if (!require("pacman")) install.packages("pacman")
-if (!require("devtools")) install.packages("devtools")
+if (!require("pacman")) {install.packages("pacman")}
+if (!require("devtools")) {install.packages("devtools")}
 devtools::install_github("stefanedwards/lemon")
 devtools::install_github("briandconnelly/growthcurve", build_vignettes = TRUE)
 #devtools::install_github("jonathansmart/BayesGrowth")
-if (!require("remotes")) install.packages("remotes")
+if (!require("remotes")) {install.packages("remotes")}
 remotes::install_github("rschwamborn/fishboot")
 pacman::p_load(plyr, tidyverse, rstatix, #Df manipulation, basic summary
                zoo, FSA, nlstools, #length bins, growth tags
@@ -2914,7 +2914,7 @@ ggsave(path = "Output/Figures/Final", filename = "D2_Growth_Models_SWG2016.tiff"
    scale_linetype_manual(name = "",
                          breaks = c("ELEFAN", "GMM"),
                          values = c("solid", "dashed"),
-                         labels = c("ELEFAN", "GMM"))+
+                         labels = c("ELEFAN (W)", "GMM (W)"))+
    theme(legend.position = c(0.095, 0.948), legend.title = element_blank(),
          legend.text = element_text(family = "sans"), 
          legend.background = element_rect(linetype = 1, color = NA)))
@@ -2931,7 +2931,7 @@ ggsave(path = "Output/Figures/Final", filename = "D2_Growth_Models_SWG2016.tiff"
     scale_linetype_manual(name = "",
                           breaks = c("BFa", "Wang"),
                           values = c("dotdash", "dotted"),
-                          labels = c("BFa", "Wang"))+
+                           labels = c("BFa (W)", "Wang (W)"))+
     theme(legend.position = c(0.090, 0.948), legend.title = element_blank(),
           legend.text = element_text(family = "sans"), 
           legend.background = element_rect(linetype = 1, color = NA)))
@@ -2952,7 +2952,7 @@ ggsave(path = "Output/Figures/Final", filename = "D2_Growth_Models_SWG2016.tiff"
     scale_color_manual(name = "",
                        breaks = c("BFa", "Wang", "BFa+", "Wang+"),
                        values = c("black", "black", "#999999", "#999999"),
-                       labels = c("BFa", "Wang", "BFa+", "Wang+"),
+                       labels = c("BFa (L)", "Wang (L)", "BFa+ (L+)", "Wang+ (L+)"),
                        guide = guide_legend(ncol = 2,
                          override.aes = list(
                          linetype = c("dotdash", "dotted", "dotdash", "solid"))))+
@@ -3071,7 +3071,7 @@ ggsave(path = "Output/Figures/Final", filename = "G_Tagging_Treatments.tiff", dp
                           axis.title.y = element_blank(),
                           legend.title = element_blank(),
                           panel.spacing.y = unit(0.05, "lines")) + 
-   scale_fill_grey(start = 0, end = 0.9, labels = Stages))
+   scale_fill_grey(start = 0.9, end = 0, labels = Stages))
 #
 #Stages per month
 (Stages_Month <- histo %>% mutate(Month = as.factor(Month)) %>% 
@@ -3084,7 +3084,7 @@ ggsave(path = "Output/Figures/Final", filename = "G_Tagging_Treatments.tiff", dp
                            axis.title.y = element_blank(),
                            legend.title = element_blank(),
                            panel.spacing.y = unit(0.05, "lines")) + 
-    scale_fill_grey(start = 0, end = 0.9, labels = Stages))
+    scale_fill_grey(start = 0.9, end = 0, labels = Stages))
 #
 (Stage_plots <- ggpubr::ggarrange(Stages_MF, Stages_Month, labels = c("A", "B"), 
                                   nrow = 2, ncol = 1, hjust = -4.2, vjust = 0.75, align = "v", 
