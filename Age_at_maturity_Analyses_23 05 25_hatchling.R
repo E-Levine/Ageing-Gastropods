@@ -172,7 +172,7 @@ Sex <- c("M" = "Male", "F" = "Female", "U" = "Undetermined")
 Months <- c("1" = "Jan", "2" = "Feb", "3" = "Mar", "4" = "Apr", "5" = "May", "6" = "Jun",
             "7" = "Jul", "8" = "Aug", "9" = "Sep", "10" = "Oct", "11" = "Nov", "12" = "Dec")
 #
-cbPalette <- c("#D55E00", "#E69F00", "#F0E442", "#009E73", "#56B4E9")
+cbPalette <- c("#DD0000", "#E69F00", "#F0E442", "#009E73", "#56B4E9")
 #Map color to Stage
 names(cbPalette) <- levels(histo$Stage)
 StaFill <- scale_fill_manual(name = "Stage", labels = Stages, values = cbPalette, na.value = "#999999")
@@ -2270,7 +2270,7 @@ head(model_S_WW)
     scale_y_continuous(expand = c(0,0), limits = c(0, 90), breaks = seq(0, 90, by = 30)) +
     scale_color_manual(name = "",
                        breaks = c("Observed", "Mean", "Predict", "95% CI"),
-                       values = c("#000000", "#000000", "#000000", "#999999"),
+                       values = c("#000000", "#000000", "#DD0000", "#999999"),
                        labels = c("Observed", "Observed mean", "Predicted mean", "95% confidence limit"),
                        guide = guide_legend(override.aes = list(
                          linetype = c("blank", "blank", "solid", "dashed"),
@@ -2349,7 +2349,7 @@ head(model_S_SW)
     scale_y_continuous(expand = c(0,0), limits = c(0, 90), breaks = seq(0, 90, by = 30)) +
     scale_color_manual(name = "",
                        breaks = c("Observed", "Mean", "Predict", "95% CI"),
-                       values = c("#000000", "#000000", "#000000", "#999999"),
+                       values = c("#000000", "#000000", "#DD0000", "#999999"),
                        labels = c("Observed", "Observed mean", "Predicted mean", "95% confidence limit"),
                        guide = guide_legend(override.aes = list(
                          linetype = c("blank", "blank", "solid", "dashed"),
@@ -2769,10 +2769,10 @@ FL_inset <- ggplot() +
     scale_x_continuous(limits = c(-82.78, -82.53), expand = c(0,0))+ #(limits = c(-82.78, -82.45)
     scale_y_continuous(limits = c(27.60, 27.884), expand = c(0,0))+ #limits = c(27.48, 27.884)
     coord_fixed()+
-    geom_text(aes(x = -82.62, y = 27.65, label = "Tampa Bay", fontface = "italic", family = "Arial"), color = "black", size = 9)+
-    geom_text(aes(x = -82.66, y = 27.689, label = "Pinellas \n Point  ", fontface = "bold", family = "Arial"), color = "black", size = 4)+
-    geom_text(aes(x = -82.56, y = 27.83, label = "Weedon \n Island", fontface = "bold", family = "Arial"), color = "black", size = 4)+
-    geom_segment(aes(x = -82.573, y = 27.827, xend = -82.597, yend = 27.84), color = "black", size = 1.25)+
+    geom_text(aes(x = -82.57, y = 27.7, label = "Tampa \n Bay", fontface = "italic", family = "Arial"), color = "black", size = 10)+
+    geom_text(aes(x = -82.64, y = 27.684, label = "Pinellas \n Point  ", fontface = "bold", family = "Arial"), color = "black", size = 7)+
+    geom_text(aes(x = -82.56, y = 27.78, label = "Weedon \n Island", fontface = "bold", family = "Arial"), color = "black", size = 7)+
+    geom_segment(aes(x = -82.575, y = 27.795, xend = -82.597, yend = 27.84), color = "black", size = 1.25)+
     geom_point(data = Station_list, aes(Longitude, Latitude), color = "black", size = 4)+
     theme(panel.border = element_rect(color = "black", fill = NA))+
     theme_void() + 
@@ -2822,7 +2822,7 @@ StationLett
 #
 (Comps <- ggpubr::ggarrange(Site_comps + rremove("xlab"), Station_comps + rremove("xlab"), 
                             labels = c("A", "B"), 
-                            nrow = 1, ncol = 2, hjust = -5.3, vjust = 1.55, align = "v"))
+                            nrow = 1, ncol = 2, hjust = -5.9, vjust = 1.55, align = "v"))
 
 #
 #
@@ -2907,7 +2907,7 @@ S_SWwCI_eq
                                 nrow = 2, ncol = 1, hjust = -5.9, vjust = 1.25, align = "v", 
                                 common.legend = FALSE))
 #
-ggsave(path = "Output/Figures/Final", filename = "I_Regressions_SL_vWW_SW.tiff", dpi = 1000, width = 8, height = 6, units = "in")
+ggsave(path = "Output/Figures", filename = "F6_Regressions_SL_vWW_SW.tiff", dpi = 1000, width = 8, height = 6, units = "in")
 
 #
 #
@@ -2940,8 +2940,9 @@ ggsave(path = "Output/Figures/Final", filename = "I_Regressions_SL_vWW_SW.tiff",
     StaFill) #scale_fill_grey(start = 0.9, end = 0, labels = Stages))
 #
 (Stage_plots <- (ggpubr::ggarrange(Stages_MF, Stages_Month, labels = c("A", "B"), 
-                                  nrow = 2, ncol = 1, hjust = -4.99, vjust = 1, align = "v", 
-                                  common.legend = TRUE, legend = "bottom") + theme(legend.text = element_text(family = "Arial"))) %>%
+                                  nrow = 2, ncol = 1, hjust = -4.99, vjust = 0.8, align = "v", 
+                                  common.legend = TRUE, legend = "bottom") + theme(legend.text = element_text(family = "Arial"), 
+                                                                                   plot.margin = margin(t=2), legend.margin = margin(t = 25, unit = "lines"))) %>%
     annotate_figure(left = text_grob("Percent (%)", rot = 90, family = "Arial", size = 14, color = "black")))
 #
 ggsave(path = "Output/Figures", filename = "Fig7_Histo_Stages_SL_Month.tiff", dpi = 1000, width = 8, height = 6, units = "in")
@@ -3090,7 +3091,7 @@ ggsave(path = "Output/Figures/Final", filename = "D2_Growth_Models_SWG2016_legen
 (BFa_MR <- MR_test %>% ggplot(aes(End_SL, predSL))+
    geom_point()+
    geom_abline(intercept = 0, linetype = "dashed")+
-   annotate("text", x = 12, y = 94, label = "RMSE = 1.63", family = "sans", size = 3)+
+   annotate("text", x = 10, y = 94, label = "RMSE = 1.63", family = "sans", size = 3)+
    scale_x_continuous("Observed shell length (mm)", expand = c(0,0), limits = c(0, 100))+
    scale_y_continuous("Predicted shell length (mm)", expand = c(0,0), limits = c(0, 100))+
    Base + theme(axis.title = element_blank(), axis.text.y = element_text(size = 14)))
@@ -3098,7 +3099,7 @@ ggsave(path = "Output/Figures/Final", filename = "D2_Growth_Models_SWG2016_legen
 (W_MR <- MR_test_raw %>% ggplot(aes((L2*10), (predSL*10)))+
     geom_point()+
     geom_abline(intercept = 0, linetype = "dashed")+
-    annotate("text", x = 12, y = 94, label = "RMSE = 3.40", family = "sans", size = 3)+
+    annotate("text", x = 10, y = 94, label = "RMSE = 3.40", family = "sans", size = 3)+
     scale_x_continuous("Observed shell length (mm)", expand = c(0,0), limits = c(0, 100))+
     scale_y_continuous("Predicted shell length (mm)", expand = c(0,0), limits = c(0, 100))+
     Base+ theme(axis.title = element_blank(), axis.text.y = element_text(size = 14)))
@@ -3106,18 +3107,18 @@ ggsave(path = "Output/Figures/Final", filename = "D2_Growth_Models_SWG2016_legen
 ##WL
 (BFa_WL <- WL_test %>% ggplot(aes(End_SL, predSL))+
     geom_point()+
-    geom_point(data = WL_h_test, aes(End_SL, predSL), shape = 17, color = "#999999", size = 2)+
+    geom_point(data = WL_h_test, aes(End_SL, predSL), shape = 17, color = "#CC0000", size = 2)+
     geom_abline(intercept = 0, linetype = "dashed")+
-    annotate("text", x = 12, y = 79, label = "RMSE = 4.28 \n RMSE2 = 0.49", family = "sans", size = 3)+
+    annotate("text", x = 10, y = 79, label = "RMSE = 4.28 \n RMSE2 = 0.49", family = "sans", size = 3)+
     scale_x_continuous("Observed shell length (mm)", expand = c(0,0), limits = c(0, 100))+
     scale_y_continuous("Predicted shell length (mm)", expand = c(0,0), limits = c(0, 100))+
     Base+ theme(axis.title.x = element_blank(), axis.text.y = element_text(size = 14), axis.title.y = element_text(hjust = -0.2)))
 #
 (W_WL <- WL_test_raw %>% ggplot(aes((L2*10), (predSL*10)))+
     geom_point()+
-    geom_point(data = WL_h_test_raw, aes((L2*10), (predSL*10)), shape = 17, color = "#999999", size = 2)+
+    geom_point(data = WL_h_test_raw, aes((L2*10), (predSL*10)), shape = 17, color = "#CC0000", size = 2)+
     geom_abline(intercept = 0, linetype = "dashed")+
-    annotate("text", x = 12, y = 77, label = "RMSE = 7.50 \n RMSE2 = 7.68", family = "sans", size = 3)+
+    annotate("text", x = 10, y = 77, label = "RMSE = 7.50 \n RMSE2 = 7.68", family = "sans", size = 3)+
     scale_x_continuous("Observed shell length (mm)", expand = c(0,0), limits = c(0, 100))+
     scale_y_continuous("Predicted shell length (mm)", expand = c(0,0), limits = c(0, 100))+
     Base + theme(axis.title.y = element_blank(), axis.text.y = element_text(size = 14)))
@@ -3127,7 +3128,7 @@ ggsave(path = "Output/Figures/Final", filename = "D2_Growth_Models_SWG2016_legen
                                     nrow = 4, ncol = 1, hjust = -6.5, vjust = 1.55, align = "v"))
 #
 #
-ggsave(path = "Output/Figures/Final", filename = "F2_Model_RMSE_SWG2016.tiff", dpi = 1000, width = 8, height = 6, units = "in")
+ggsave(path = "Output/Figures", filename = "F10_Model_RMSE_SWG2016.tiff", dpi = 1000, width = 8, height = 6, units = "in")
 #
 #
 #
