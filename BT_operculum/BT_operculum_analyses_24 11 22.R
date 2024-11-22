@@ -280,9 +280,9 @@ model_S_SL <- cbind(predicted_S_SL, S_SL_CI) %>%
 makeRegEqnLabel(wt_SL, "Striae_grp", "SL")
 (S_SLwCI_eq <- S_SLwCI +
     annotate("text", x = 1.2, y = 110, label = "SL = 10.39 * Striae + 25.71",
-             size = 3.5, color = "black", family = "Arial")+
+             size = 2.5, color = "black", family = "Arial")+
     annotate("text", x = 0.9, y = 103, label = paste("R^2 ==", round(S_SL_sum$r.squared, 2)), parse = TRUE,
-             size = 3.5, color = "black", family = "Arial"))
+             size = 2.5, color = "black", family = "Arial"))
 #
 ##- Save figure -- Organize S_SL_tab, S_SL_sum_tab, and S_SLmeans for output
 ggsave(path = "Output/Figures", 
@@ -296,6 +296,293 @@ ggsave(path = "Output/Figures",
 #
 rm(S_SL, S_SL_CI, S_SL_sum, S_SL_fill, predicted_S_SL, ShellLengths, model_S_SL, wt_SL, SL_wt, 
    S_SLwCI, S_SL_tab, S_SL_sum_tab)
+#
+#
+#
+#
+#
+####A. Regressions - continuous age v SW####
+#
+#scaledAge vs SW
+ShellWidths <- Morphology %>% dplyr::select(scaledAge, SW) %>% drop_na()
+#
+#Check data
+boxplot(SW ~ scaledAge, data = Morphology)
+gghistogram(Morphology$SW)
+#Unequal variances, normal distribution
+#
+#Regression
+set.seed(54321)
+S_SW <- lm(SW ~ scaledAge, data = ShellWidths)
+summary(S_SW)
+#
+#Residuals
+plot(fitted(S_SW), resid(S_SW))
+#
+#Get weights and run weighted model
+SW_wt <- 1/lm(abs(S_SW$residuals) ~ S_SW$fitted.values)$fitted.values^2
+set.seed(54321)
+wt_SW <- lm(SW ~ scaledAge, data = ShellWidths, weights = SW_wt)
+#
+(S_SW_sum <- summary(wt_SW))
+#MLR table with test values
+S_SW_tab <- tidy(wt_SW)
+names(S_SW_tab) <- c("term", "Est.", "SE", "t", "p-value")
+S_SW_sum_tab <- glance(wt_SW) %>% dplyr::select(r.squared:df, deviance:df.residual)
+names(S_SW_sum_tab) <- c("R2", "adjR2", "RSE", "F", "p-value", "df", "RSS", "Resid.df")
+confint(wt_SW)
+#
+S_SW_fill <- ShellWidths[complete.cases(ShellWidths), ] 
+S_SWmeans <- ShellWidths %>% mutate(binAge = lencat(scaledAge, 0, w = 0.5)) %>%
+  group_by(binAge) %>% summarise(aveSW = mean(SW, na.rm = T), sdSW = sd(SW, na.rm = T)) 
+#
+predicted_S_SW <- data.frame(predSW = predict(wt_SW, S_SW_fill), scaledAge = S_SW_fill$scaledAge)
+S_SW_CI <- predict(wt_SW, interval = "predict")
+model_S_SW <- cbind(predicted_S_SW, S_SW_CI) %>% 
+  dplyr::select(-fit) %>% dplyr::select(scaledAge, predSW, everything()) %>%
+  group_by(scaledAge) %>% dplyr::summarise(predSW = mean(predSW, na.rm = T), lwr = mean(lwr), upr = mean(upr))
+
+#
+(S_SWwCI  <- ggplot()+
+    geom_jitter(data= Morphology, aes(scaledAge, SW, color = "Observed"), width = 0.15, alpha = 0.4)+
+    geom_point(data = S_SWmeans, aes(binAge, aveSW, color = "Mean"), shape = 15, size = 4.5)+
+    geom_line(data = model_S_SW, aes(scaledAge, predSW, color = "Predict"))+
+    geom_line(data = model_S_SW, aes(scaledAge, lwr, color = "95% CI"), linetype = "dashed")+
+    geom_line(data = model_S_SW, aes(scaledAge, upr, color = "95% CI"), linetype = "dashed")+
+    ylab("Shell width (mm)")+ 
+    xlab("Number of striae")+
+    scale_x_continuous(expand = c(0,0.1), limits = c(0, 6)) + 
+    scale_y_continuous(expand = c(0,0), limits = c(0,60)) +
+    scale_color_manual(name = "",
+                       breaks = c("Observed" , "Mean", "Predict", "95% CI"),
+                       values = c("#000000", "#000000", "#FF0000", "#999999"),
+                       labels = c("Observed", "Observed mean", "Predicted mean", "95% confidence limit"),
+                       guide = guide_legend(override.aes = list(
+                         linetype = c("blank", "blank", "solid", "dashed"),
+                         shape = c(19, 15, NA, NA))))+
+    basetheme)
+#
+makeRegEqnLabel(wt_SW, "Striae_grp", "SW")
+#
+(S_SWwCI_eq <- S_SWwCI + 
+    annotate("text", x = 1.15, y = 52, label = "SW = 4.67 * Striae + 14.01",
+             size = 2.5, color = "black", family = "Arial")+
+    annotate("text", x = 0.9, y = 47.5, label = paste("R^2 ==", round(S_SW_sum$r.squared, 2)), parse = TRUE,
+             size = 2.5, color = "black", family = "Arial"))
+#
+##- Save figure -- Organize S_SL_tab, S_SL_sum_tab, and S_SLmeans for output
+ggsave(path = "Output/Figures", 
+       filename = paste("F2B_ShellWidth_", format(Sys.Date(), "%Y_%m_%d"),".tiff", sep = ""), dpi = 1000)
+#
+(S_SW_table <- S_SW_tab %>% flextable() %>% 
+    set_formatter("p-value" = function(x){formatC(x, format = "e", digits = 3)}) %>% autofit())
+(S_SW_sum_table <- S_SW_sum_tab %>% flextable() %>% colformat_num(j = c(6, 8), digits = 0) %>% 
+    set_formatter("p-value" = function(x){formatC(x, format = "e", digits = 3)}) %>% autofit())
+#
+rm(ShellWidths,S_SW, S_SW_CI, S_SW_tab, S_SW_sum, S_SW_sum_tab, S_SW_fill, predicted_S_SW, model_S_SW,
+   wt_SW, SW_wt, S_SWwCI)
+#
+#
+#
+#
+#
+#
+####A. Regressions - continuous age v WW####
+#
+#scaledAge vs WW
+#
+ShellWeight <- Morphology %>% dplyr::select(scaledAge, WW) %>% drop_na()
+#Check data
+boxplot(WW ~ scaledAge, data = ShellWeight)
+gghistogram(ShellWeight$WW)
+#Unequal variances, non-normal distribution
+ShellWeight <- ShellWeight %>% mutate(logWW = log(WW+1),
+                                      sqrtWW = sqrt(WW))
+gghistogram(ShellWeight$sqrtWW)
+gghistogram(ShellWeight$logWW)
+boxplot(sqrtWW ~ scaledAge, data = ShellWeight)
+#
+#Regression
+set.seed(54321)
+S_WW <- lm(sqrtWW ~ scaledAge, data = ShellWeight)
+summary(S_WW)
+#
+#Residuals
+plot(fitted(S_WW), resid(S_WW))
+#
+#Get weights and run weighted model
+WW_wt <- 1/lm(abs(S_WW$residuals) ~ S_WW$fitted.values)$fitted.values^2
+set.seed(54321)
+wt_WW <- lm(sqrtWW ~ scaledAge, data = ShellWeight, weights = WW_wt)
+#
+#
+(S_WW_sum <- summary(wt_WW))
+S_WW_tab <- tidy(wt_WW)
+names(S_WW_tab) <- c("term", "Est.", "SE", "t", "p-value")
+S_WW_sum_tab <- glance(wt_WW) %>% dplyr::select(r.squared:df, deviance:df.residual)
+names(S_WW_sum_tab) <- c("R2", "adjR2", "RSE", "F", "p-value", "df", "RSS", "Resid.df")
+#
+confint(wt_WW)
+#
+S_WW_fill <- ShellWeight[complete.cases(ShellWeight), ] 
+S_WWmeans <- ShellWeight %>% mutate(binAge = lencat(scaledAge, 0, w = 0.5)) %>%
+  group_by(binAge) %>% summarise(aveWW = mean(WW, na.rm = T), sdWW = sd(WW, na.rm = T)) 
+#
+predicted_S_WW <- data.frame(predWW = (predict(wt_WW, S_WW_fill)^2), scaledAge = S_WW_fill$scaledAge)
+S_WW_CI <- predict(wt_WW, interval = "predict")^2
+model_S_WW <- cbind(predicted_S_WW, S_WW_CI) %>% 
+  dplyr::select(-fit) %>% dplyr::select(scaledAge, predWW, everything()) %>%
+  group_by(scaledAge) %>% dplyr::summarise(predWW = mean(predWW, na.rm = T), lwr = mean(lwr), upr = mean(upr))
+#
+#
+(S_WWwCI  <- ggplot()+
+    geom_jitter(data = Morphology, aes(scaledAge, WW, color = "Observed"), width = 0.15, alpha = 0.4)+
+    geom_point(data = S_WWmeans, aes(binAge, aveWW, color = "Mean"), shape = 15, size = 4.5)+
+    geom_line(data = model_S_WW, aes(scaledAge, predWW, color = "Predict"))+
+    geom_line(data = model_S_WW, aes(scaledAge, lwr, color = "95% CI"), linetype = "dashed")+
+    geom_line(data = model_S_WW, aes(scaledAge, upr, color = "95% CI"), linetype = "dashed")+
+    ylab("Wet weight (g)")+ 
+    xlab("Number of striae")+
+    scale_x_continuous(expand = c(0,0.1), limits = c(0, 6)) + 
+    scale_y_continuous(expand = c(0,0), limits = c(0,125), breaks = seq(0, 125, by = 25)) +
+    scale_color_manual(name = "",
+                       breaks = c("Observed", "Mean", "Predict", "95% CI"),
+                       values = c("#000000", "#000000", "#FF0000", "#999999"),
+                       labels = c("Observed", "Observed mean", "Predicted mean", "95% confidence limit"),
+                       guide = guide_legend(override.aes = list(
+                         linetype = c("blank", "blank", "solid", "dashed"),
+                         shape = c(19, 15, NA, NA))))+
+    basetheme)
+#
+makeRegEqnLabel(wt_WW, "Striae_grp", "sqrtWW")
+#
+(S_WWwCI_eq <- S_WWwCI +
+    annotate("text", x = 1.25, y = 110, label = "sqrtWW = 0.99 * Striae + 1.25",
+             size = 2.5, color = "black", family = "Arial")+
+    annotate("text", x = 1.1, y = 103, label = paste("R^2 ==", round(S_WW_sum$r.squared, 2)), parse = TRUE,
+             size = 2.5, color = "black", family = "Arial"))
+#
+##- Save figure -- Organize S_SL_tab, S_SL_sum_tab, and S_SLmeans for output
+ggsave(path = "Output/Figures", 
+       filename = paste("F2C_ShellWeight_", format(Sys.Date(), "%Y_%m_%d"),".tiff", sep = ""), dpi = 1000)
+#
+(S_WW_table <- S_WW_tab %>% flextable() %>% 
+    set_formatter("p-value" = function(x){formatC(x, format = "e", digits = 3)}) %>% autofit())
+(S_WW_sum_table <- S_WW_sum_tab %>% flextable() %>% colformat_num(j = c(6, 8), digits = 0) %>% 
+    set_formatter("p-value" = function(x){formatC(x, format = "e", digits = 3)}) %>% autofit())
+#
+rm(S_WW, S_WW_CI, S_WW_sum, S_WW_fill, predicted_S_WW, ShellWeight, model_S_WW, wt_WW, WW_wt, 
+   S_WWwCI, S_WW_tab, S_WW_sum_tab)
+#
+#
+#
+#
+#
+#
+####A. Regressions - continuous age v OL####
+#
+#scaledAge vs OL
+#
+OpLength <- Morphology %>% dplyr::select(scaledAge, Opercula_L) %>% drop_na()
+#Check data
+boxplot(Opercula_L ~ scaledAge, data = OpLength)
+gghistogram(OpLength$Opercula_L)
+#Unequal variances, normal distribution
+#
+#Regression
+set.seed(54321)
+S_OL <- lm(Opercula_L ~ scaledAge, data = OpLength)
+summary(S_OL)
+#
+#Residuals
+plot(fitted(S_OL), resid(S_OL))
+#
+#Get weights adn run weighted model
+OL_wt <- 1/lm(abs(S_OL$residuals) ~ S_OL$fitted.values)$fitted.values^2
+set.seed(54321)
+wt_OL <- lm(Opercula_L ~ scaledAge, data = OpLength, weights = OL_wt)
+#
+#
+(S_OL_sum <- summary(wt_OL))
+#MLR table with test values
+S_OL_tab <- tidy(wt_OL)
+names(S_OL_tab) <- c("term", "Est.", "SE", "t", "p-value")
+S_OL_sum_tab <- glance(wt_OL) %>% dplyr::select(r.squared:df, deviance:df.residual)
+names(S_OL_sum_tab) <- c("R2", "adjR2", "RSE", "F", "p-value", "df", "RSS", "Resid.df")
+#
+confint(wt_OL, level = 0.95)
+#
+S_OL_fill <- OpLength[complete.cases(OpLength), ] 
+S_OLmeans <- OpLength %>% mutate(binAge = lencat(scaledAge, 0, w = 0.5)) %>%
+  group_by(binAge) %>% summarise(aveOL = mean(Opercula_L, na.rm = T), sdOL = sd(Opercula_L, na.rm = T)) 
+#
+predicted_S_OL <- data.frame(predOL = predict(wt_OL, S_OL_fill), scaledAge = S_OL_fill$scaledAge)
+S_OL_CI <- predict(wt_OL, interval = "predict")
+model_S_OL <- cbind(predicted_S_OL, S_OL_CI) %>% 
+  dplyr::select(-fit) %>% dplyr::select(scaledAge, predOL, everything()) %>%
+  group_by(scaledAge) %>% dplyr::summarise(predOL = mean(predOL, na.rm = T), lwr = mean(lwr), upr = mean(upr))
+#
+#
+(S_OLwCI  <- ggplot()+
+    geom_jitter(data = Morphology, aes(scaledAge, Opercula_L, color = "Observed"), width = 0.15, alpha = 0.4)+
+    geom_point(data = S_OLmeans, aes(binAge, aveOL, color = "Mean"), shape = 15, size = 4.5)+
+    geom_line(data = model_S_OL, aes(scaledAge, predOL, color = "Predict"))+
+    geom_line(data = model_S_OL, aes(scaledAge, lwr, color = "95% CI"), linetype = "dashed")+
+    geom_line(data = model_S_OL, aes(scaledAge, upr, color = "95% CI"), linetype = "dashed")+
+    ylab("Operculum length (mm)")+ 
+    xlab("Number of striae")+
+    scale_x_continuous(expand = c(0,0.1), limits = c(0, 6)) + 
+    scale_y_continuous(expand = c(0,0), limits = c(0,60)) +
+    scale_color_manual(name = "",
+                       breaks = c("Observed", "Mean", "Predict", "95% CI"),
+                       values = c("#000000", "#000000", "#FF0000", "#999999"),
+                       labels = c("Observed", "Observed mean", "Predicted mean", "95% confidence limit"),
+                       guide = guide_legend(override.aes = list(
+                         linetype = c("blank", "blank", "solid", "dashed"),
+                         shape = c(19, 15, NA, NA))))+
+    basetheme)
+#
+makeRegEqnLabel(wt_OL, "Striae_grp", "OL")
+#
+(S_OLwCI_eq <- S_OLwCI +
+    annotate("text", x = 1.15, y = 52, label = "OL = 4.62 * Striae + 10.56",
+             size = 2.5, color = "black", family = "Arial")+
+    annotate("text", x = 1.1, y = 47.5, label = paste("R^2 ==", round(S_OL_sum$r.squared, 2)), parse = TRUE,
+             size = 2.5, color = "black", family = "Arial"))
+#
+##- Save figure -- Organize S_SL_tab, S_SL_sum_tab, and S_SLmeans for output
+ggsave(path = "Output/Figures", 
+       filename = paste("F2D_OperculumLength_", format(Sys.Date(), "%Y_%m_%d"),".tiff", sep = ""), dpi = 1000)
+#
+(S_OL_table <- S_OL_tab %>% flextable() %>% 
+    set_formatter("p-value" = function(x){formatC(x, format = "e", digits = 3)}) %>% autofit())
+(S_OL_sum_table <- S_OL_sum_tab %>% flextable() %>% colformat_num(j = c(6, 8), digits = 0) %>% 
+    set_formatter("p-value" = function(x){formatC(x, format = "e", digits = 3)}) %>% autofit())
+#
+rm(S_OL, S_OL_CI, S_OL_sum, S_OL_fill, predicted_S_OL, OpLength, model_S_OL, wt_OL, OL_wt, 
+   S_OLwCI, S_OL_tab, S_OL_sum_tab)
+#
+#
+#
+#
+#
+####A. Regression summary####
+#
+#Combine regression table means for output
+(Regression_sum_tab <- left_join(S_SLmeans, S_SWmeans) %>% 
+   left_join(S_WWmeans) %>% left_join(S_OLmeans) %>%
+   flextable() %>% vline(j = c(1, 3, 5, 7)) %>% autofit())
+#
+rm(S_SLmeans, S_SWmeans, S_WWmeans, S_OLmeans)
+#
+ggarrange(S_SLwCI_eq + rremove("x.title"), S_SWwCI_eq + rremove("x.title"), 
+          S_WWwCI_eq, S_OLwCI_eq, 
+          nrow = 2, ncol = 2, common.legend = TRUE)
+##- Save figure 
+ggsave(path = "Output/Figures", 
+       filename = paste("F2_Regressions_", format(Sys.Date(), "%Y_%m_%d"),".tiff", sep = ""), dpi = 1000)
+#
+rm(S_SLwCI_eq, S_SWwCI_eq, S_WWwCI_eq, S_OLwCI_eq)
 #
 #
 #
