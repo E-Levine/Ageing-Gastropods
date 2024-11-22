@@ -16,6 +16,7 @@ rm(list=ls(all=TRUE)) # clears out environment
 #Load require packages (install as necessary)
 if (!require("pacman")) {install.packages("pacman")}
 if (!require("devtools")) {install.packages("devtools")}
+install.packages("https://cran.r-project.org/src/contrib/Archive/raster/raster_3.6-23.tar.gz", repos = NULL, type = "source")
 devtools::install_github("stefanedwards/lemon")
 devtools::install_github("briandconnelly/growthcurve", build_vignettes = TRUE)
 #devtools::install_github("jonathansmart/BayesGrowth")
@@ -23,7 +24,7 @@ if (!require("remotes")) {install.packages("remotes")}
 remotes::install_github("rschwamborn/fishboot")
 pacman::p_load(plyr, tidyverse, rstatix, #Df manipulation, basic summary
                zoo, FSA, nlstools, #length bins, growth tags
-               ggmap, ggsn, ggpubr, ggfortify, scales, lemon, raster, maps, #Mapping and figures
+               ggmap, ggsn, ggpubr, ggfortify, scales, lemon, raster, maps, mapdata, extrafont, #Mapping and figures
                lmPerm, car, TropFishR, lubridate, MASS, fishboot, #ELEFAN
                fishmethods, mclust, ClusterR, TMB, tmbstan, #Alternatives
                broom, flextable, janitor, officer)
@@ -71,12 +72,12 @@ summary(WetLab)
 #
 WetLab <- WetLab %>% subset(Date < "2021-02-28") #%>% mutate(IDNumber = as.numeric(substr(ID, 3, 5)))
 #
-Hatchlings <- read.csv("../CSV/WetLab/2017_Hatchling_growth.csv", na.string = c("Z", "", "NA")) %>%
+Hatchlings <- read.csv("CSV/2017_Hatchling_growth.csv", na.string = c("Z", "", "NA")) %>%
   mutate(Date = as.Date(Date, format = "%m/%d/%Y"),
          MonYr = as.yearmon(Date, format = "%m/%y"))
 head(Hatchlings)
 #
-Juvs <- read.csv("../CSV/WetLab/2014_BTjuveniles.csv", na.string = c("Z", "", "NA")) %>%
+Juvs <- read.csv("CSV/2014_BTjuveniles.csv", na.string = c("Z", "", "NA")) %>%
   mutate(Date = as.Date(Date, format = "%m/%d/%Y"),
          MonYr = as.yearmon(Date, format = "%m/%y"))
 head(Juvs)
@@ -101,6 +102,10 @@ histo <- histology %>% mutate(Date = as.Date(Collection_Date, format = "%m/%d/%Y
 #
 ###Figure formatting####
 #
+##Get Arial font
+font_import()
+loadfonts(device = "win")
+fonts()
 ###Table properties
 set_flextable_defaults(
   font.family = "Times New Roman",
@@ -134,28 +139,28 @@ makeRegEqnLabel <- function(fit, x_char, y_char) {
 Base <- theme_bw() +
   theme(panel.grid = element_blank(), panel.border = element_blank(), panel.background = element_blank(),
               axis.line = element_line(color = "black"),
-              axis.title = element_text(size = 14, color = "black", family = "sans"),
+              axis.title = element_text(size = 14, color = "black", family = "Arial"),
               axis.text.x = element_text(size = 13, color = "black", 
-                                         margin = unit(c(0.5, 0.5, 0, 0.5), "cm"), family = "sans"),
+                                         margin = unit(c(0.5, 0.5, 0, 0.5), "cm"), family = "Arial"),
               axis.text.y = element_text(size = 14, color = "black", 
-                                         margin = unit(c(0, 0.5, 0, 0), "cm"), family = "sans"),
+                                         margin = unit(c(0, 0.5, 0, 0), "cm"), family = "Arial"),
               axis.ticks.length = unit(-0.15, "cm"), plot.margin = margin(0.25, 0.5, 0.25, 0.25, "cm"))
 Base2 <- theme(panel.grid = element_blank(), panel.border = element_blank(), panel.background = element_blank(),
                axis.line = element_line(color = "black"),
-               axis.title = element_text(size = 12, color = "black", family = "sans"),
+               axis.title = element_text(size = 12, color = "black", family = "Arial"),
                axis.text.x = element_text(size = 9, color = "black", 
-                                          margin = unit(c(0.5, 0.5, 0, 0.5), "cm"), family = "sans"),
+                                          margin = unit(c(0.5, 0.5, 0, 0.5), "cm"), family = "Arial"),
                axis.text.y = element_text(size = 8, color = "black", 
-                                          margin = unit(c(0, 0.5, 0, 0), "cm"), family = "sans"),
+                                          margin = unit(c(0, 0.5, 0, 0), "cm"), family = "Arial"),
                axis.ticks.length = unit(-0.15, "cm"), plot.margin = margin(0.25, 0.5, 0.25, 0.25, "cm"))
 XCate <- theme(axis.title.x = element_blank(),
-               axis.text.x = element_text(color = "black", size = 14, family = "sans",
+               axis.text.x = element_text(color = "black", size = 14, family = "Arial",
                                           margin = unit(c(0.5, 0.5, 0, 0.5), "cm")),
                plot.margin = margin(0.25, 0.5, 0.25, 0.25, "cm"))
-theme_f <- theme(strip.text.y = element_text(color = "black", size = 11, family = "sans", face = "bold"),
+theme_f <- theme(strip.text.y = element_text(color = "black", size = 11, family = "Arial", face = "bold"),
                  strip.background = element_rect(fill = "#CCCCCC"),
                  panel.spacing = unit(0.75, "lines"),
-                 strip.text.x = element_text(size = 10, face = "bold", family = "sans"))
+                 strip.text.x = element_text(size = 10, face = "bold", family = "Arial"))
 #
 Sites <- c("WE" = "Weedon Island", "PP" = "Pinellas Point")
 Stations <- c("OY" = "Oyster reef", "SG" = "Seagrass", "SS" = "Soft sediment")
@@ -167,7 +172,7 @@ Sex <- c("M" = "Male", "F" = "Female", "U" = "Undetermined")
 Months <- c("1" = "Jan", "2" = "Feb", "3" = "Mar", "4" = "Apr", "5" = "May", "6" = "Jun",
             "7" = "Jul", "8" = "Aug", "9" = "Sep", "10" = "Oct", "11" = "Nov", "12" = "Dec")
 #
-cbPalette <- c("#D55E00", "#E69F00", "#F0E442", "#009E73", "#56B4E9")
+cbPalette <- c("#DD0000", "#E69F00", "#F0E442", "#009E73", "#56B4E9")
 #Map color to Stage
 names(cbPalette) <- levels(histo$Stage)
 StaFill <- scale_fill_manual(name = "Stage", labels = Stages, values = cbPalette, na.value = "#999999")
@@ -178,7 +183,7 @@ Model_color <- scale_color_manual(name = "Model", labels = c("ELEFAN", "Recaptur
 #
 ####Survey summary####
 #
-All_data <- read.csv("../CSV/TB/All_snails.csv", na.string = c("Z", "", "NA", " ")) %>% 
+All_data <- read.csv("CSV/All_snails.csv", na.string = c("Z", "", "NA", " ")) %>% 
   filter(Species == "BT" & Site != "FtD") %>% drop_na(Station) %>%
   mutate(MonYr = as.factor(paste(Year, Month, sep = "/")),
          Site = as.factor(Site),
@@ -1775,7 +1780,7 @@ predict2_WL_h <- function(x) predict(x, WL_h_test)
 (WL_h_test <- cbind(WL_h_test,
                   predict(WL_h_model_tt, WL_h_test), 
                   confint(Boot(WL_h_model_tt, f = predict2_WL_h), type = "perc")) %>%
-    rename(predSL = 'predict(WL_h_model_tt, WL_h_test)', lower = '95% LCI', upper = '95% UCI'))
+    rename(predSL = 'predict(WL_h_model_tt, WL_h_test)', lower = '2.5 %', upper = '97.5 %'))
 #
 #RMSE
 sqrt(mean((WL_h_test$End_SL - WL_h_test$predSL)^2)) #7.675782
@@ -2265,7 +2270,7 @@ head(model_S_WW)
     scale_y_continuous(expand = c(0,0), limits = c(0, 90), breaks = seq(0, 90, by = 30)) +
     scale_color_manual(name = "",
                        breaks = c("Observed", "Mean", "Predict", "95% CI"),
-                       values = c("#000000", "#000000", "#000000", "#999999"),
+                       values = c("#000000", "#000000", "#DD0000", "#999999"),
                        labels = c("Observed", "Observed mean", "Predicted mean", "95% confidence limit"),
                        guide = guide_legend(override.aes = list(
                          linetype = c("blank", "blank", "solid", "dashed"),
@@ -2344,7 +2349,7 @@ head(model_S_SW)
     scale_y_continuous(expand = c(0,0), limits = c(0, 90), breaks = seq(0, 90, by = 30)) +
     scale_color_manual(name = "",
                        breaks = c("Observed", "Mean", "Predict", "95% CI"),
-                       values = c("#000000", "#000000", "#000000", "#999999"),
+                       values = c("#000000", "#000000", "#DD0000", "#999999"),
                        labels = c("Observed", "Observed mean", "Predicted mean", "95% confidence limit"),
                        guide = guide_legend(override.aes = list(
                          linetype = c("blank", "blank", "solid", "dashed"),
@@ -2742,33 +2747,32 @@ ggsave(path = "Output/Figures/2023 02/", filename = "P_GrowthRates_Re_WL_2023 02
 #
 ###Figure 1-Station Map####
 #
-Station_list <- read.csv("../CSV/LatLong/TB_Pop_Stations.csv", na.string = c("Z", "", "NA", " "))
-US <- getData("GADM", country = "usa", level = 1)
+Station_list <- read.csv("CSV/TB_Pop_Stations.csv", na.string = c("Z", "", "NA", " "))
+US <- readRDS("CSV/gadm36_USA_1_sp.rds")
 FL <- US %>% subset(NAME_1 == "Florida")
 FL_map <- fortify(FL)
 #
-FL_inset <- ggplot()+
-  geom_blank(data = FL_map, aes(long, lat))+
-  geom_map(data = FL_map, map = FL_map, aes(group = group, map_id = id),
-           fill = "#999999", color = "black")+
-  geom_text(aes(-85.7, 28.9, label = "Gulf of Mexico", fontface = "italic"), color = "black", size = 3)+
-  geom_text(aes(-80.4, 30, label = "Atlantic \n Ocean", fontface = "italic"), color = "black", size = 3)+
+FL_inset <- ggplot() +
+  geom_blank(data = FL_map, aes(long, lat))+ 
+  geom_map(data = FL_map, map = FL_map, aes(group = group, map_id = id), fill = "#999999", color = "black")+
+  #geom_polygon(data = FL_map, aes(long, lat, group = group), fill = "#999999", color = "black")+
+  geom_text(aes(-85.7, 28.9, label = "Gulf of Mexico", fontface = "italic", family = "Arial"), color = "black", size = 3.5)+
+  geom_text(aes(-80.4, 30, label = "Atlantic \n Ocean", fontface = "italic", family = "Arial"), color = "black", size = 3.5)+
   coord_fixed()+ theme_void() + theme(panel.border = element_rect(color = "black", fill = NA),
-                                      panel.background = element_rect(color = "white"))+
+                                   panel.background = element_rect(color = "white"))+
   geom_point(aes(-82.6, 27.75), size = 6.5, color = "black", shape = 15)
 #
 #
 (TB_Gastro <- ggplot()+
     geom_blank(data = FL_map, aes(long, lat))+ 
-    geom_map(data = FL_map, map = FL_map, aes(group = group, map_id = id),
-             fill = "#CCCCCC", color = "black")+
-    scale_x_continuous(limits = c(-82.78, -82.45), expand = c(0,0))+ 
-    scale_y_continuous(limits = c(27.48, 27.884), expand = c(0,0))+
+    geom_map(data = FL_map, map = FL_map, aes(group = group, map_id = id), fill = "#CCCCCC", color = "black")+
+    scale_x_continuous(limits = c(-82.78, -82.53), expand = c(0,0))+ #(limits = c(-82.78, -82.45)
+    scale_y_continuous(limits = c(27.60, 27.884), expand = c(0,0))+ #limits = c(27.48, 27.884)
     coord_fixed()+
-    geom_text(aes(x = -82.55, y = 27.75, label = "Tampa Bay", fontface = "italic"), color = "black", size = 9)+
-    geom_text(aes(x = -82.658, y = 27.715, label = "Pinellas \n Point  ", fontface = "bold"), color = "black", size = 4)+
-    geom_text(aes(x = -82.574, y = 27.845, label = "Weedon \n Island", fontface = "bold"), color = "black", size = 4)+
-    geom_segment(aes(x = -82.584, y = 27.845, xend = -82.597, yend = 27.84), color = "black", size = 1.25)+
+    geom_text(aes(x = -82.57, y = 27.7, label = "Tampa \n Bay", fontface = "italic", family = "Arial"), color = "black", size = 10)+
+    geom_text(aes(x = -82.64, y = 27.684, label = "Pinellas \n Point  ", fontface = "bold", family = "Arial"), color = "black", size = 7)+
+    geom_text(aes(x = -82.56, y = 27.78, label = "Weedon \n Island", fontface = "bold", family = "Arial"), color = "black", size = 7)+
+    geom_segment(aes(x = -82.575, y = 27.795, xend = -82.597, yend = 27.84), color = "black", size = 1.25)+
     geom_point(data = Station_list, aes(Longitude, Latitude), color = "black", size = 4)+
     theme(panel.border = element_rect(color = "black", fill = NA))+
     theme_void() + 
@@ -2776,12 +2780,12 @@ FL_inset <- ggplot()+
 #
 #
 #Saving at 1400
-TB_Gastro +
-  north(symbol = 12, x.min = -82.445, x.max = -82.545, y.min = 27.57, y.max = 27.6, scale = 1)+
+TB_Gastro +  
+  north(symbol = 12, x.min = -82.60, x.max = -82.57, y.min = 27.605, y.max = 27.62, scale = 1)+ 
   ggsn::scalebar(dist = 2, dist_unit = "km", transform = TRUE, model = "WGS84",
-                 x.min = -82.527, x.max = -82.473, y.min = 27.55, y.max = 27.6,
-                 height = 0.1, st.dist = 0.15, st.bottom = FALSE, st.size = 3.5)+
-  patchwork::inset_element(FL_inset, 0, 0.666, 0.4, 1.066, align_to = "panel") #left, bottom, right, top
+                 x.min = -82.64, x.max = -82.60, y.min = 27.605, y.max = 27.655,
+                 height = 0.1, st.dist = 0.10, st.bottom = FALSE, st.size = 3.5)+
+  patchwork::inset_element(FL_inset, 0, 0.56, 0.5, 1.08, align_to = "panel") #left, bottom, right, top
 #
 #
 #
@@ -2818,11 +2822,11 @@ StationLett
 #
 (Comps <- ggpubr::ggarrange(Site_comps + rremove("xlab"), Station_comps + rremove("xlab"), 
                             labels = c("A", "B"), 
-                            nrow = 1, ncol = 2, hjust = -5.3, vjust = 1.55, align = "v"))
+                            nrow = 1, ncol = 2, hjust = -5.9, vjust = 1.55, align = "v"))
 
 #
 #
-ggsave(path = "Output/Figures/Final", filename = "B_Site_Hab_Comps.tiff", dpi = 1000, width = 8, height = 6, units = "in")
+ggsave(path = "Output/Figures", filename = "Fig2_Site_Hab_Comps.tiff", dpi = 1000, width = 8, height = 6, units = "in")
 #
 #
 #
@@ -2851,7 +2855,117 @@ ggsave(path = "Output/Figures/Final/", filename = "C_LFD_monthly.tiff", dpi = 10
 #
 #
 #
-###Figure 4-Models####
+###Figure 4-Recaps####
+#
+(Recaps_by_days <- IDs %>% group_by(ID) %>% #Group by ID
+   filter(Recaptured == "Y") %>% mutate(N = as.factor(row_number()))  %>% #Filter to Recaps and count number of recaps/ID
+   ggplot(aes(x = diff, fill = N))+ #Color by recap N
+   geom_histogram(position = "stack", binwidth = 10, boundary = 0, closed = "right") +
+   Base + #theme(legend.position = "none")+
+   scale_fill_manual(values = c("#99CCFF", "#003399", "#000000"), labels = c(1, 2, 3))+
+   #scale_fill_grey(start = 0.1, end = 0.8)+
+   scale_x_continuous("Number of days", expand = c(0,0), limits = c(0, 442), breaks = seq(0, 440, 40))+
+   scale_y_continuous("Number of recaptures", expand = c(0,0), limits = c(0, 10), breaks = seq(0, 10, 2)))
+#
+#
+ggsave(path = "Output/Figures", filename = "4_Recaptures.tiff", dpi = 1000, width = 8, height = 6, units = "in")
+#
+#
+#
+#
+###Figure6-
+###Figure 5-Tag Treatments####
+#
+#
+(Treat_SL <- ggboxplot(WL_treats, "Treatment", "SL", fill = "darkgray")+
+   scale_y_continuous("Shell length (mm)", expand = c(0,0), limits = c(0,100))+
+   scale_x_discrete("",labels = Treatments)+
+   Base)
+#
+(Treat_Rate <- ggboxplot(WL_treats, "Treatment", "Rate", fill = "darkgray")+
+    scale_y_continuous("Growth rate (mm/day)", expand = c(0,0), limits = c(0,0.06))+
+    scale_x_discrete("", labels = Treatments)+
+    Base)
+#
+#
+(Treat_plots <- ggpubr::ggarrange(Treat_SL, Treat_Rate, labels = c("A", "B"), 
+                                  nrow = 1, ncol = 2, hjust = -6.9, vjust = 1.55, align = "v"))
+#
+ggsave(path = "Output/Figures/Final", filename = "G_Tagging_Treatments.tiff", dpi = 1000, width = 8, height = 6, units = "in")
+#
+#
+#
+#
+###Figure 6-Regressions####
+#
+S_WWwCI_eq
+S_SWwCI_eq
+#
+#
+#
+(Reg_plots <- ggpubr::ggarrange(S_WWwCI_eq, S_SWwCI_eq, labels = c("A", "B"), 
+                                nrow = 2, ncol = 1, hjust = -5.9, vjust = 1.25, align = "v", 
+                                common.legend = FALSE))
+#
+ggsave(path = "Output/Figures", filename = "F6_Regressions_SL_vWW_SW.tiff", dpi = 1000, width = 8, height = 6, units = "in")
+
+#
+#
+###Figure 7-Histology####
+#
+##Stages per sex
+(Stages_MF <- histo %>% drop_na(SLclass, Stage) %>%
+   ggplot(aes(SLclass, fill = Stage)) +
+   geom_bar(position = "fill")+
+   lemon::facet_rep_grid(MF_Final~.)+
+   scale_y_continuous("Percent", labels = label_percent(suffix = ""), expand = c(0,0))+
+   xlab("Shell length (mm)") + 
+   Base + theme_f + theme(axis.text.x = element_text(size = 9.5),
+                          axis.title.y = element_blank(),
+                          legend.title = element_blank(),
+                          panel.spacing.y = unit(0.05, "lines"), plot.margin = margin(t = 10, b = 5)) + 
+   StaFill)#scale_fill_grey(start = 0.9, end = 0, labels = Stages))
+#
+#Stages per month
+(Stages_Month <- histo %>% mutate(Month = as.factor(Month)) %>% 
+    ggplot(aes(Month, fill = Stage)) +
+    geom_bar(position = "fill")+
+    lemon::facet_rep_grid(MF_Final~.)+
+    scale_y_continuous("Percent", labels = label_percent(suffix = ""), expand = c(0,0))+
+    scale_x_discrete(labels = Months)+
+    Base + theme_f + theme(axis.text.x = element_text(size = 11),
+                           axis.title.y = element_blank(),
+                           legend.title = element_blank(),
+                           panel.spacing.y = unit(0.05, "lines")) + 
+    StaFill) #scale_fill_grey(start = 0.9, end = 0, labels = Stages))
+#
+(Stage_plots <- (ggpubr::ggarrange(Stages_MF, Stages_Month, labels = c("A", "B"), 
+                                  nrow = 2, ncol = 1, hjust = -4.99, vjust = 0.8, align = "v", 
+                                  common.legend = TRUE, legend = "bottom") + theme(legend.text = element_text(family = "Arial"), 
+                                                                                   plot.margin = margin(t=2), legend.margin = margin(t = 25, unit = "lines"))) %>%
+    annotate_figure(left = text_grob("Percent (%)", rot = 90, family = "Arial", size = 14, color = "black")))
+#
+ggsave(path = "Output/Figures", filename = "Fig7_Histo_Stages_SL_Month.tiff", dpi = 1000, width = 8, height = 6, units = "in")
+#
+#
+#
+#
+#
+###Figure 8-Size at maturity####
+#
+#
+(Out <- matureSL(histo, "BT", 0.50, 3, 2))
+#Use following for axis title, BW
+Out[[1]] + Base + theme_f + 
+  theme(axis.title.x = element_text(size = 14, color = "black", family = "sans"),
+        legend.position = "none") + 
+  scale_color_manual(name = "", labels = c("M" = "Male", "F" = "Female"), values = c("#000000", "#666666")) 
+#
+ggsave(path = "Output/Figures/Final", filename = "J_Size_Maturity.tiff", dpi = 1000, width = 8, height = 6, units = "in")
+#
+#
+
+###Figure 9-Models####
 #
 ##Pop LFD
 #ELEFAN
@@ -2899,7 +3013,7 @@ ggsave(path = "Output/Figures/Final", filename = "D2_Growth_Models_SWG2016.tiff"
 #
 #
 # 
-###Figure 4-Models (legend)####
+###Figure 9-Models (legend)####
 #
 ##Pop LFD
 #ELEFAN
@@ -2916,7 +3030,7 @@ ggsave(path = "Output/Figures/Final", filename = "D2_Growth_Models_SWG2016.tiff"
                          values = c("solid", "dashed"),
                          labels = c("ELEFAN (W)", "GMM (W)"))+
    theme(legend.position = c(0.095, 0.948), legend.title = element_blank(),
-         legend.text = element_text(family = "sans"), 
+         legend.text = element_text(family = "Arial"), 
          legend.background = element_rect(linetype = 1, color = NA)))
 #
 ##MR
@@ -2951,7 +3065,7 @@ ggsave(path = "Output/Figures/Final", filename = "D2_Growth_Models_SWG2016.tiff"
     Base+
     scale_color_manual(name = "",
                        breaks = c("BFa", "Wang", "BFa+", "Wang+"),
-                       values = c("black", "black", "#999999", "#999999"),
+                       values = c("#0072B2", "#0072B2", "#E69F00", "#E69F00"),
                        labels = c("BFa (L)", "Wang (L)", "BFa+ (L+)", "Wang+ (L+)"),
                        guide = guide_legend(ncol = 2,
                          override.aes = list(
@@ -2971,31 +3085,13 @@ ggsave(path = "Output/Figures/Final", filename = "D2_Growth_Models_SWG2016_legen
 #
 #
 # 
-###Figure 5-Recaps####
-#
-(Recaps_by_days <- IDs %>% group_by(ID) %>% #Group by ID
-   filter(Recaptured == "Y") %>% mutate(N = as.factor(row_number()))  %>% #Filter to Recaps and count number of recaps/ID
-   ggplot(aes(x = diff, fill = N))+ #Color by recap N
-   geom_histogram(position = "stack", binwidth = 10, boundary = 0, closed = "right") +
-   Base + theme(legend.position = "none")+
-   scale_fill_grey(start = 0.1, end = 0.8)+
-   scale_x_continuous("Number of days", expand = c(0,0), limits = c(0, 442), breaks = seq(0, 440, 40))+
-   scale_y_continuous("Number of recaptures", expand = c(0,0), limits = c(0, 10), breaks = seq(0, 10, 2)))
-#
-#
-ggsave(path = "Output/Figures/Final", filename = "E_Recaptures.tiff", dpi = 1000, width = 8, height = 6, units = "in")
-#
-#
-#
-#
-###Figure6-
-###Figure 6-Predicted RMSEs####
+###Figure 10-Predicted RMSEs####
 #
 ##MR
 (BFa_MR <- MR_test %>% ggplot(aes(End_SL, predSL))+
    geom_point()+
    geom_abline(intercept = 0, linetype = "dashed")+
-   annotate("text", x = 12, y = 94, label = "RMSE = 1.63", family = "sans", size = 3)+
+   annotate("text", x = 10, y = 94, label = "RMSE = 1.63", family = "sans", size = 3)+
    scale_x_continuous("Observed shell length (mm)", expand = c(0,0), limits = c(0, 100))+
    scale_y_continuous("Predicted shell length (mm)", expand = c(0,0), limits = c(0, 100))+
    Base + theme(axis.title = element_blank(), axis.text.y = element_text(size = 14)))
@@ -3003,7 +3099,7 @@ ggsave(path = "Output/Figures/Final", filename = "E_Recaptures.tiff", dpi = 1000
 (W_MR <- MR_test_raw %>% ggplot(aes((L2*10), (predSL*10)))+
     geom_point()+
     geom_abline(intercept = 0, linetype = "dashed")+
-    annotate("text", x = 12, y = 94, label = "RMSE = 3.40", family = "sans", size = 3)+
+    annotate("text", x = 10, y = 94, label = "RMSE = 3.40", family = "sans", size = 3)+
     scale_x_continuous("Observed shell length (mm)", expand = c(0,0), limits = c(0, 100))+
     scale_y_continuous("Predicted shell length (mm)", expand = c(0,0), limits = c(0, 100))+
     Base+ theme(axis.title = element_blank(), axis.text.y = element_text(size = 14)))
@@ -3011,18 +3107,18 @@ ggsave(path = "Output/Figures/Final", filename = "E_Recaptures.tiff", dpi = 1000
 ##WL
 (BFa_WL <- WL_test %>% ggplot(aes(End_SL, predSL))+
     geom_point()+
-    geom_point(data = WL_h_test, aes(End_SL, predSL), shape = 17, color = "#999999", size = 2)+
+    geom_point(data = WL_h_test, aes(End_SL, predSL), shape = 17, color = "#CC0000", size = 2)+
     geom_abline(intercept = 0, linetype = "dashed")+
-    annotate("text", x = 12, y = 79, label = "RMSE = 4.28 \n RMSE2 = 0.49", family = "sans", size = 3)+
+    annotate("text", x = 10, y = 79, label = "RMSE = 4.28 \n RMSE2 = 0.49", family = "sans", size = 3)+
     scale_x_continuous("Observed shell length (mm)", expand = c(0,0), limits = c(0, 100))+
     scale_y_continuous("Predicted shell length (mm)", expand = c(0,0), limits = c(0, 100))+
     Base+ theme(axis.title.x = element_blank(), axis.text.y = element_text(size = 14), axis.title.y = element_text(hjust = -0.2)))
 #
 (W_WL <- WL_test_raw %>% ggplot(aes((L2*10), (predSL*10)))+
     geom_point()+
-    geom_point(data = WL_h_test_raw, aes((L2*10), (predSL*10)), shape = 17, color = "#999999", size = 2)+
+    geom_point(data = WL_h_test_raw, aes((L2*10), (predSL*10)), shape = 17, color = "#CC0000", size = 2)+
     geom_abline(intercept = 0, linetype = "dashed")+
-    annotate("text", x = 12, y = 77, label = "RMSE = 7.50 \n RMSE2 = 7.68", family = "sans", size = 3)+
+    annotate("text", x = 10, y = 77, label = "RMSE = 7.50 \n RMSE2 = 7.68", family = "sans", size = 3)+
     scale_x_continuous("Observed shell length (mm)", expand = c(0,0), limits = c(0, 100))+
     scale_y_continuous("Predicted shell length (mm)", expand = c(0,0), limits = c(0, 100))+
     Base + theme(axis.title.y = element_blank(), axis.text.y = element_text(size = 14)))
@@ -3032,95 +3128,7 @@ ggsave(path = "Output/Figures/Final", filename = "E_Recaptures.tiff", dpi = 1000
                                     nrow = 4, ncol = 1, hjust = -6.5, vjust = 1.55, align = "v"))
 #
 #
-ggsave(path = "Output/Figures/Final", filename = "F2_Model_RMSE_SWG2016.tiff", dpi = 1000, width = 8, height = 6, units = "in")
+ggsave(path = "Output/Figures", filename = "F10_Model_RMSE_SWG2016.tiff", dpi = 1000, width = 8, height = 6, units = "in")
 #
-#
-#
-###Figure 7-Tag Treatments####
-#
-#
-(Treat_SL <- ggboxplot(WL_treats, "Treatment", "SL", fill = "darkgray")+
-   scale_y_continuous("Shell length (mm)", expand = c(0,0), limits = c(0,100))+
-   scale_x_discrete("",labels = Treatments)+
-   Base)
-#
-(Treat_Rate <- ggboxplot(WL_treats, "Treatment", "Rate", fill = "darkgray")+
-    scale_y_continuous("Growth rate (mm/day)", expand = c(0,0), limits = c(0,0.06))+
-    scale_x_discrete("", labels = Treatments)+
-    Base)
-#
-#
-(Treat_plots <- ggpubr::ggarrange(Treat_SL, Treat_Rate, labels = c("A", "B"), 
-                                 nrow = 1, ncol = 2, hjust = -6.9, vjust = 1.55, align = "v"))
-#
-ggsave(path = "Output/Figures/Final", filename = "G_Tagging_Treatments.tiff", dpi = 1000, width = 8, height = 6, units = "in")
-#
-#
-#
-#
-###Figure 8-Histology####
-#
-##Stages per sex
-(Stages_MF <- histo %>% drop_na(SLclass, Stage) %>%
-   ggplot(aes(SLclass, fill = Stage)) +
-   geom_bar(position = "fill")+
-   lemon::facet_rep_grid(MF_Final~.)+
-   scale_y_continuous("Percent", labels = scales::percent_format(), expand = c(0,0))+
-   xlab("Shell length (mm)") + 
-   Base + theme_f + theme(axis.text.x = element_text(size = 9.5),
-                          axis.title.y = element_blank(),
-                          legend.title = element_blank(),
-                          panel.spacing.y = unit(0.05, "lines")) + 
-   scale_fill_grey(start = 0.9, end = 0, labels = Stages))
-#
-#Stages per month
-(Stages_Month <- histo %>% mutate(Month = as.factor(Month)) %>% 
-    ggplot(aes(Month, fill = Stage)) +
-    geom_bar(position = "fill")+
-    lemon::facet_rep_grid(MF_Final~.)+
-    scale_y_continuous("Percent", labels = scales::percent_format(), expand = c(0,0))+
-    scale_x_discrete(labels = Months)+
-    Base + theme_f + theme(axis.text.x = element_text(size = 11),
-                           axis.title.y = element_blank(),
-                           legend.title = element_blank(),
-                           panel.spacing.y = unit(0.05, "lines")) + 
-    scale_fill_grey(start = 0.9, end = 0, labels = Stages))
-#
-(Stage_plots <- ggpubr::ggarrange(Stages_MF, Stages_Month, labels = c("A", "B"), 
-                                  nrow = 2, ncol = 1, hjust = -4.2, vjust = 0.75, align = "v", 
-                                  common.legend = TRUE))
-#
-ggsave(path = "Output/Figures/Final", filename = "H_Histo_Stages_SL_Month.tiff", dpi = 1000, width = 8, height = 6, units = "in")
-#
-#
-#
-#
-#
-###Figure 9-Regressions####
-#
-S_WWwCI_eq
-S_SWwCI_eq
-#
-#
-#
-(Reg_plots <- ggpubr::ggarrange(S_WWwCI_eq, S_SWwCI_eq, labels = c("A", "B"), 
-                                  nrow = 2, ncol = 1, hjust = -5.9, vjust = 1.25, align = "v", 
-                                  common.legend = FALSE))
-#
-ggsave(path = "Output/Figures/Final", filename = "I_Regressions_SL_vWW_SW.tiff", dpi = 1000, width = 8, height = 6, units = "in")
-
-#
-#
-###Figure 10-Size at maturity####
-#
-#
-(Out <- matureSL(histo, "BT", 0.50, 3, 2))
-#Use following for axis title, BW
-Out[[1]] + Base + theme_f + 
-  theme(axis.title.x = element_text(size = 14, color = "black", family = "sans"),
-        legend.position = "none") + 
-  scale_color_manual(name = "", labels = c("M" = "Male", "F" = "Female"), values = c("#000000", "#666666")) 
-#
-ggsave(path = "Output/Figures/Final", filename = "J_Size_Maturity.tiff", dpi = 1000, width = 8, height = 6, units = "in")
 #
 #
